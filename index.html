@@ -48,6 +48,7 @@
   * { box-sizing: border-box; }
   a { color: #A63A3A; text-decoration-thickness: 1px; text-underline-offset: 3px; }
   a:hover { color: #C8791B; }
+  button, a { -webkit-tap-highlight-color: transparent; }
   button { font-family: inherit; transition: background .25s ease, color .25s ease, border-color .25s ease, transform .18s ease; }
   button:active { transform: scale(.97); }
   :focus-visible { outline: 3px solid #C8791B; outline-offset: 3px; }
@@ -97,6 +98,8 @@
   .vl-tag { transform-origin: 50% -10px; }
   .vl-tag-on { animation: vlHang 4.6s ease-in-out infinite; }
   [data-w="nav"]::-webkit-scrollbar { display: none; }
+  [data-w="zones"]::-webkit-scrollbar { display: none; }
+  .leaflet-tile-pane { filter: sepia(.16) saturate(.94) brightness(1.02); }
   .vl-scroll::-webkit-scrollbar { height: 6px; }
   .vl-scroll::-webkit-scrollbar-thumb { background: #DCCBB2; border-radius: 3px; }
   .vl-pin { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: #8A5210; color: #FFF6EC; font-family: "Noto Serif", serif; font-weight: 700; font-size: 15px; border: 2px solid #FAF5EC; box-shadow: 0 3px 8px rgba(62,44,35,.4); }
@@ -117,6 +120,8 @@
   @media (max-width: 559px) {
     [data-w="band"] { margin-inline: -20px !important; border-radius: 0 !important; }
     [data-w="heropic"] { margin-inline: -20px !important; border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; }
+    [data-w="mapcard"] { margin-inline: -20px !important; border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; }
+    #vl-map { height: 380px !important; }
   }
 
   @media (min-width: 900px) {
@@ -136,7 +141,7 @@
     [data-w="h2"] { font-size: 42px !important; }
     [data-w="g4"] { grid-template-columns: repeat(4, 1fr) !important; }
     [data-w="g3"] { grid-template-columns: repeat(3, 1fr) !important; }
-    [data-w="g2"] { grid-template-columns: repeat(2, 1fr) !important; }
+    [data-w="g2"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; align-items: start !important; }
     [data-w="narrow"] { max-width: 820px; }
     [data-w="prog"] { display: grid !important; grid-template-columns: .8fr 1.2fr; gap: 48px; align-items: start; }
     [data-w="progA"] { position: sticky; top: 86px; }
@@ -145,6 +150,13 @@
     [data-w="foot"] { display: grid !important; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start; }
     [data-w="band"] { margin: 0 !important; border-radius: 16px !important; aspect-ratio: 21 / 9 !important; }
     [data-w="hl"] { grid-template-columns: repeat(4, 1fr) !important; }
+    /* Map and its zone strip run full width; the two info cards pair below. */
+    [data-w="mapcard"] { grid-column: 1 / -1; }
+    [data-w="zones"] { grid-column: 1 / -1 !important; display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; overflow: visible !important; }
+    [data-w="zones"] button { white-space: normal !important; }
+    [data-w="info"] { grid-column: 1 / -1; }
+    [data-w="notelist"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 12px 34px !important; }
+    #vl-map { height: 440px !important; }
     [data-w="gal2"] { grid-template-columns: repeat(3, 1fr) !important; gap: 12px !important; }
     [data-w="gal2"] > figure:first-child { grid-row: span 2 !important; aspect-ratio: auto !important; }
     [data-w="gal2"] > figure:last-child { grid-column: span 1 !important; aspect-ratio: 1 / 1 !important; }
@@ -305,7 +317,7 @@
           <span style="width:7px;height:7px;background:#C8791B;transform:rotate(45deg);display:block"></span><span>Nghi thức</span>
         </div>
         <h2 data-w="h2" style="font-family:'Noto Serif',serif;font-size:32px;line-height:1.2;margin:0">Bông hồng cài áo</h2>
-        <p style="margin:0;font-size:17px;color:#D9CBB8;text-wrap:pretty">Một bông hồng cài lên ngực áo — lòng biết ơn không cần nói thành lời. Sáng 21/8, người về dự hội sẽ được cài lên áo một bông hoa của riêng mình.</p>
+        <p style="margin:0;font-size:17px;color:#D9CBB8;text-wrap:pretty">Một bông hồng cài lên ngực áo là lòng biết ơn không cần nói thành lời. Sáng 21/8, người về dự hội sẽ được cài lên áo một bông hoa của riêng mình.</p>
         <p style="margin:0;font-size:15px;color:#C0AE99">Chạm vào mỗi bông hoa để đọc ý nghĩa.</p>
         <div role="group" aria-label="Bốn màu hoa hồng cài áo" style="position:relative;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;margin-top:8px">
           <span aria-hidden="true" style="position:absolute;left:6%;right:6%;top:44px;height:1px;background:linear-gradient(90deg,rgba(224,162,74,0),rgba(224,162,74,.5),rgba(224,162,74,0))"></span>
@@ -361,17 +373,31 @@
         <sc-for list="{{ activeEvents }}" as="ev" hint-placeholder-count="6">
           <li style="position:relative;list-style:none">
             <sc-if value="{{ ev.isPhase }}" hint-placeholder-val="{{ false }}">
-              <div style="{{ ev.phaseStyle }}">{{ ev.phaseLabel }}</div>
+              <div style="display:flex;align-items:center;gap:11px;margin-left:-27px;margin-bottom:16px;padding-top:4px">
+                <span aria-hidden="true" style="{{ ev.iconStyle }}"><span style="{{ ev.iconInnerStyle }}"></span></span>
+                <span style="font-family:'Noto Serif',serif;font-style:italic;font-size:17px;font-weight:600;color:#8A5210;white-space:nowrap">{{ ev.phaseLabel }}</span>
+                <span aria-hidden="true" style="flex:1;height:1px;background:linear-gradient(90deg,#E2D3BC 0%,rgba(226,211,188,0) 100%)"></span>
+              </div>
             </sc-if>
             <sc-if value="{{ ev.isEvent }}" hint-placeholder-val="{{ true }}">
               <div style="position:relative;padding:0 0 22px 40px;min-height:56px">
                 <span style="{{ ev.medStyle }}">{{ ev.start }}</span>
-                <div style="{{ ev.cardStyle }}">
+                <div style="{{ ev.cardStyle }}" onClick="{{ ev.toggle }}" onKeyDown="{{ ev.onKey }}" role="{{ ev.role }}" tabIndex="{{ ev.tab }}" aria-expanded="{{ ev.expanded }}">
                   <sc-if value="{{ ev.range }}" hint-placeholder-val="{{ false }}">
                     <span style="font-size:14px;font-weight:600;color:#8A7360;letter-spacing:.02em">{{ ev.range }}</span>
                   </sc-if>
                   <div style="{{ ev.titleStyle }}">{{ ev.title }}</div>
                   <div style="font-size:15.5px;color:#7A6553;line-height:1.45">{{ ev.venue }}</div>
+                  <sc-if value="{{ ev.hasDetail }}" hint-placeholder-val="{{ false }}">
+                    <span aria-hidden="true" style="{{ ev.caretStyle }}"></span>
+                    <div style="{{ ev.detailStyle }}">
+                      <sc-for list="{{ ev.detailItems }}" as="di" hint-placeholder-count="2">
+                        <div style="{{ di.rowStyle }}">
+                          <span style="{{ di.dotStyle }}"></span><span>{{ di.text }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
                 </div>
               </div>
             </sc-if>
@@ -392,66 +418,50 @@
     <div data-w="hl" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div style="background:#FAF5EC;border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease" style-hover="transform:translateY(-3px);box-shadow:0 10px 24px rgba(62,44,35,.10)">
         <div style="position:relative;aspect-ratio:4/3;color:#A6907A;background:#EFE3CD"><image-slot id="vl-hl-1" shape="rect" data-filled="" src="img/s/hl-ky-uc.jpg" placeholder="Ký ức tháng Bảy"></image-slot></div>
-        <div style="padding:13px 14px 15px;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:13px;font-weight:700;color:#8A5210;letter-spacing:.06em">20 &amp; 21/8 · 19h</span>
-          <span style="font-family:'Noto Serif',serif;font-size:19px;font-weight:600;line-height:1.3;color:#3E2C23">Ký ức tháng Bảy</span>
-          <span style="font-size:16px;color:#6B5647;line-height:1.5;text-wrap:pretty">Không gian tái hiện tháng Bảy xưa của người Đà Nẵng.</span>
+        <div style="padding:13px 14px 15px">
+          <p style="margin:0;font-size:16px;color:#6B5647;line-height:1.55;text-wrap:pretty"><span style="font-family:'Noto Serif',serif;font-size:17px;font-weight:600;color:#3E2C23">Ký ức tháng Bảy</span> tái hiện nếp cũ Đà Nẵng, hai đêm 20 và 21/8.</p>
         </div>
       </div>
       <div style="background:#FAF5EC;border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease" style-hover="transform:translateY(-3px);box-shadow:0 10px 24px rgba(62,44,35,.10)">
         <div style="position:relative;aspect-ratio:4/3;color:#A6907A;background:#EFE3CD"><image-slot id="vl-hl-2" shape="rect" data-filled="" src="img/s/hl-truyen-dang.jpg" placeholder="Lễ truyền đăng"></image-slot></div>
-        <div style="padding:13px 14px 15px;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:13px;font-weight:700;color:#8A5210;letter-spacing:.06em">21/8 · 18h30</span>
-          <span style="font-family:'Noto Serif',serif;font-size:19px;font-weight:600;line-height:1.3;color:#3E2C23">Lễ truyền đăng</span>
-          <span style="font-size:16px;color:#6B5647;line-height:1.5;text-wrap:pretty">Ngọn đăng chuyền tay cầu quốc thái dân an.</span>
+        <div style="padding:13px 14px 15px">
+          <p style="margin:0;font-size:16px;color:#6B5647;line-height:1.55;text-wrap:pretty"><span style="font-family:'Noto Serif',serif;font-size:17px;font-weight:600;color:#3E2C23">Lễ truyền đăng</span> chuyền ngọn đăng cầu quốc thái dân an, tối 21/8.</p>
         </div>
       </div>
       <div style="background:#FAF5EC;border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease" style-hover="transform:translateY(-3px);box-shadow:0 10px 24px rgba(62,44,35,.10)">
         <div style="position:relative;aspect-ratio:4/3;color:#A6907A;background:#EFE3CD"><image-slot id="vl-hl-3" shape="rect" data-filled="" src="img/s/hl-khat-thuc.jpg" placeholder="Cổ Phật khất thực"></image-slot></div>
-        <div style="padding:13px 14px 15px;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:13px;font-weight:700;color:#8A5210;letter-spacing:.06em">22/8 · 6h sáng</span>
-          <span style="font-family:'Noto Serif',serif;font-size:19px;font-weight:600;line-height:1.3;color:#3E2C23">Cổ Phật khất thực</span>
-          <span style="font-size:16px;color:#6B5647;line-height:1.5;text-wrap:pretty">Đoàn Tăng Ni mang bình bát đi trên đường phố.</span>
+        <div style="padding:13px 14px 15px">
+          <p style="margin:0;font-size:16px;color:#6B5647;line-height:1.55;text-wrap:pretty"><span style="font-family:'Noto Serif',serif;font-size:17px;font-weight:600;color:#3E2C23">Cổ Phật khất thực</span> sáng sớm 22/8, đoàn Tăng Ni mang bình bát đi qua đường phố.</p>
         </div>
       </div>
       <div style="background:#FAF5EC;border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease" style-hover="transform:translateY(-3px);box-shadow:0 10px 24px rgba(62,44,35,.10)">
         <div style="position:relative;aspect-ratio:4/3;color:#A6907A;background:#EFE3CD"><image-slot id="vl-hl-4" shape="rect" data-filled="" src="img/s/hl-com-chay.jpg" placeholder="Cơm chay &amp; trà đạo"></image-slot></div>
-        <div style="padding:13px 14px 15px;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:13px;font-weight:700;color:#8A5210;letter-spacing:.06em">Suốt lễ hội</span>
-          <span style="font-family:'Noto Serif',serif;font-size:19px;font-weight:600;line-height:1.3;color:#3E2C23">Cơm chay và trà đạo</span>
-          <span style="font-size:16px;color:#6B5647;line-height:1.5;text-wrap:pretty">Cơm chay tự chọn từ 9h30 ngày 21/8, trà đạo cả ba ngày.</span>
+        <div style="padding:13px 14px 15px">
+          <p style="margin:0;font-size:16px;color:#6B5647;line-height:1.55;text-wrap:pretty"><span style="font-family:'Noto Serif',serif;font-size:17px;font-weight:600;color:#3E2C23">Cơm chay và trà đạo</span> mở cả ba ngày, cơm tự chọn từ sáng 21/8.</p>
         </div>
       </div>
       <div style="background:#FAF5EC;border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease" style-hover="transform:translateY(-3px);box-shadow:0 10px 24px rgba(62,44,35,.10)">
         <div style="position:relative;aspect-ratio:4/3;color:#A6907A;background:#EFE3CD"><image-slot id="vl-hl-5" shape="rect" data-filled="" src="img/s/hl-hoi-trai.jpg" placeholder="Hội trại &amp; lửa trại"></image-slot></div>
-        <div style="padding:13px 14px 15px;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:13px;font-weight:700;color:#8A5210;letter-spacing:.06em">21/8 · 16h &amp; 21h</span>
-          <span style="font-family:'Noto Serif',serif;font-size:19px;font-weight:600;line-height:1.3;color:#3E2C23">Hội trại và lửa trại</span>
-          <span style="font-size:16px;color:#6B5647;line-height:1.5;text-wrap:pretty">Khai mạc hội trại chiều 21/8, lửa trại 21h–22h30.</span>
+        <div style="padding:13px 14px 15px">
+          <p style="margin:0;font-size:16px;color:#6B5647;line-height:1.55;text-wrap:pretty"><span style="font-family:'Noto Serif',serif;font-size:17px;font-weight:600;color:#3E2C23">Hội trại và lửa trại</span> khai mạc chiều 21/8, đốt lửa từ 21h.</p>
         </div>
       </div>
       <div style="background:#FAF5EC;border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease" style-hover="transform:translateY(-3px);box-shadow:0 10px 24px rgba(62,44,35,.10)">
         <div style="position:relative;aspect-ratio:4/3;color:#A6907A;background:#EFE3CD"><image-slot id="vl-hl-6" shape="rect" data-filled="" src="img/s/hl-thu-phap.jpg" placeholder="Thư pháp &amp; bia ma nhai"></image-slot></div>
-        <div style="padding:13px 14px 15px;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:13px;font-weight:700;color:#8A5210;letter-spacing:.06em">Suốt lễ hội</span>
-          <span style="font-family:'Noto Serif',serif;font-size:19px;font-weight:600;line-height:1.3;color:#3E2C23">Thư pháp và bia ma nhai</span>
-          <span style="font-size:16px;color:#6B5647;line-height:1.5;text-wrap:pretty">Tặng chữ thư pháp và triển lãm ảnh hệ thống bia ma nhai.</span>
+        <div style="padding:13px 14px 15px">
+          <p style="margin:0;font-size:16px;color:#6B5647;line-height:1.55;text-wrap:pretty"><span style="font-family:'Noto Serif',serif;font-size:17px;font-weight:600;color:#3E2C23">Thư pháp</span> tặng chữ tại chỗ, bên triển lãm ảnh bia ma nhai trên vách núi.</p>
         </div>
       </div>
       <div style="background:#FAF5EC;border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease" style-hover="transform:translateY(-3px);box-shadow:0 10px 24px rgba(62,44,35,.10)">
         <div style="position:relative;aspect-ratio:4/3;color:#A6907A;background:#EFE3CD"><image-slot id="vl-hl-7" shape="rect" data-filled="" src="img/s/hl-hoc-bong.jpg" placeholder="Lễ khai mạc"></image-slot></div>
-        <div style="padding:13px 14px 15px;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:13px;font-weight:700;color:#8A5210;letter-spacing:.06em">21/8 · 7h30</span>
-          <span style="font-family:'Noto Serif',serif;font-size:19px;font-weight:600;line-height:1.3;color:#3E2C23">Lễ khai mạc</span>
-          <span style="font-size:16px;color:#6B5647;line-height:1.5;text-wrap:pretty">Chương trình nghệ thuật, lễ mừng thọ cụ cao niên và thả bong bóng vì hòa bình.</span>
+        <div style="padding:13px 14px 15px">
+          <p style="margin:0;font-size:16px;color:#6B5647;line-height:1.55;text-wrap:pretty"><span style="font-family:'Noto Serif',serif;font-size:17px;font-weight:600;color:#3E2C23">Lễ khai mạc</span> với chương trình nghệ thuật, mừng thọ cụ cao niên, thả bong bóng hòa bình.</p>
         </div>
       </div>
       <div style="background:#FAF5EC;border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease" style-hover="transform:translateY(-3px);box-shadow:0 10px 24px rgba(62,44,35,.10)">
         <div style="position:relative;aspect-ratio:4/3;color:#A6907A;background:#EFE3CD"><image-slot id="vl-hl-8" shape="rect" data-filled="" src="img/s/hl-goc-anh.jpg" placeholder="Góc chụp ảnh"></image-slot></div>
-        <div style="padding:13px 14px 15px;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:13px;font-weight:700;color:#8A5210;letter-spacing:.06em">Suốt lễ hội</span>
-          <span style="font-family:'Noto Serif',serif;font-size:19px;font-weight:600;line-height:1.3;color:#3E2C23">Góc chụp ảnh</span>
-          <span style="font-size:16px;color:#6B5647;line-height:1.5;text-wrap:pretty">Tiểu cảnh sen, hoa đăng và năm ngọn núi.</span>
+        <div style="padding:13px 14px 15px">
+          <p style="margin:0;font-size:16px;color:#6B5647;line-height:1.55;text-wrap:pretty"><span style="font-family:'Noto Serif',serif;font-size:17px;font-weight:600;color:#3E2C23">Góc chụp ảnh</span> dựng tiểu cảnh sen, hoa đăng và dáng năm ngọn núi.</p>
         </div>
       </div>
     </div>
@@ -463,9 +473,8 @@
     </div>
     <h2 data-w="h2" style="font-family:'Noto Serif',serif;font-size:32px;line-height:1.2;margin:0">Đường đến và các khu vực chính</h2>
 
-    <div data-w="g2" style="display:grid;gap:18px">
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;background:#FAF5EC">
+    <div data-w="g2" style="display:grid;gap:18px;align-items:start">
+      <div data-w="mapcard" style="border:1px solid #E2D3BC;border-radius:14px;overflow:hidden;background:#FAF5EC">
           <div style="position:relative;isolation:isolate;z-index:0">
             <div id="vl-map" role="application" aria-label="Bản đồ phân khu lễ hội trên nền OpenStreetMap" style="height:340px;width:100%;background:#F2E8D6"></div>
             <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" title="Dữ liệu bản đồ: OpenStreetMap · CARTO" aria-label="Bản quyền dữ liệu bản đồ: OpenStreetMap và CARTO" style="position:absolute;right:8px;bottom:8px;z-index:500;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:rgba(250,245,236,.92);border:1px solid #A6907A;color:#6B5647;font-size:13px;font-weight:700;text-decoration:none">i</a>
@@ -478,49 +487,37 @@
 
           </div>
         </div>
-        <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <ul data-w="zones" style="list-style:none;margin:0;padding:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
           <sc-for list="{{ zones }}" as="z" hint-placeholder-count="8">
-            <li>
+            <li style="flex:0 0 auto">
               <button type="button" onClick="{{ z.focus }}" style="{{ z.btnStyle }}">
                 <span style="{{ z.numStyle }}">{{ z.n }}</span>
-                <span style="font-size:16px;font-weight:600;color:#3E2C23;line-height:1.35;text-align:left">{{ z.name }}</span>
+                <span style="font-size:16px;font-weight:600;line-height:1.35;text-align:left">{{ z.name }}</span>
               </button>
             </li>
           </sc-for>
-        </ul>
-      </div>
+      </ul>
 
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:flex;flex-direction:column;gap:12px;background:#3E2C23;color:#EFE3D2;border-radius:14px;padding:18px">
-          <div style="font-family:'Noto Serif',serif;font-size:20px;font-weight:600;color:#FAF5EC">Gửi xe và giao thông</div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <span aria-hidden="true" style="flex:none;width:36px;height:36px;border-radius:10px;background:rgba(224,162,74,.16);display:flex;align-items:center;justify-content:center;color:#E8B368;font-family:'Noto Serif',serif;font-weight:700;font-size:19px">P</span>
-            <span style="font-size:16px;line-height:1.5;text-wrap:pretty">Chỉ gửi xe tại điểm Ban tổ chức quản lý, <strong style="color:#E0A24A">giá niêm yết tại cổng</strong>. Tránh điểm tự phát ven đường.</span>
-          </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <span aria-hidden="true" style="flex:none;width:36px;height:36px;border-radius:10px;background:rgba(224,162,74,.16);display:flex;align-items:center;justify-content:center;color:#E0A24A">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"></path><path d="M9 19 12 5l3 14"></path></svg>
-            </span>
-            <span style="font-size:16px;line-height:1.5;text-wrap:pretty">Cấm đỗ quanh Huyền Trân Công Chúa – Lê Văn Hiến. <strong style="color:#E0A24A">Sáng 22/8</strong> xin nhường đường đoàn khất thực.</span>
-          </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <span aria-hidden="true" style="flex:none;width:36px;height:36px;border-radius:10px;background:rgba(224,162,74,.16);display:flex;align-items:center;justify-content:center;color:#E0A24A">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-            </span>
-            <span style="font-size:16px;line-height:1.5;text-wrap:pretty">Có thang máy lên Thủy Sơn; điểm trực y tế thường trực suốt lễ hội.</span>
-          </div>
+      <div data-w="info" style="border:1px solid #E2D3BC;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+          <div style="font-family:'Noto Serif',serif;font-size:20px;font-weight:600;color:#3E2C23">Để ngày lễ thêm trọn vẹn</div>
+          <button type="button" onClick="{{ toggleEtq }}" aria-expanded="{{ etqOpen }}" aria-label="Mở phần giải thích từng mục" style="flex:none;background:transparent;border:0;cursor:pointer;padding:0;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:flex-end">
+            <span aria-hidden="true" style="{{ etqSignStyle }}"></span>
+          </button>
         </div>
-        <div style="border:1px solid #E2D3BC;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
-          <div style="font-family:'Noto Serif',serif;font-size:20px;font-weight:600;color:#3E2C23">Vài lưu ý khi tham dự</div>
-          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
-            <sc-for list="{{ etiquette }}" as="e" hint-placeholder-count="5">
-              <li style="display:flex;gap:10px;align-items:flex-start">
-                <span style="width:9px;height:9px;background:#C8791B;transform:rotate(45deg);display:block;flex:none;margin-top:9px"></span>
-                <span style="font-size:16px;color:#4A382E;line-height:1.5;text-wrap:pretty"><strong style="color:#3E2C23">{{ e.t }}</strong>: {{ e.d }}</span>
-              </li>
-            </sc-for>
-          </ul>
-        </div>
+        <ul data-w="notelist" style="list-style:none;margin:0;padding:0;display:grid;gap:10px">
+          <sc-for list="{{ notes }}" as="e" hint-placeholder-count="4">
+            <li style="display:flex;gap:10px;align-items:flex-start">
+              <span style="width:9px;height:9px;background:#C8791B;transform:rotate(45deg);display:block;flex:none;margin-top:9px"></span>
+              <div style="display:flex;flex-direction:column;flex:1">
+                <span style="font-size:16px;font-weight:600;color:#3E2C23;line-height:1.5">{{ e.t }}</span>
+                <div style="{{ e.dStyle }}">
+                  <span style="font-size:15.5px;color:#6B5647;line-height:1.5;text-wrap:pretty">{{ e.d }}</span>
+                </div>
+              </div>
+            </li>
+          </sc-for>
+        </ul>
       </div>
     </div>
   </section>
@@ -534,7 +531,7 @@
       <figure style="margin:0;position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;color:#A6907A;background:#FAF5EC"><image-slot id="vl-g-3" shape="rect" data-filled="" src="img/s/g-long-tan.jpg" placeholder="Cài bông hồng"></image-slot></figure>
       <figure style="margin:0;position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;color:#A6907A;background:#FAF5EC"><image-slot id="vl-g-4" shape="rect" data-filled="" src="img/s/g-tang-qua.jpg" placeholder="Cho chữ thư pháp"></image-slot></figure>
       <figure style="margin:0;position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;color:#A6907A;background:#FAF5EC"><image-slot id="vl-g-5" shape="rect" data-filled="" src="img/s/g-danh-trong.jpg" placeholder="Cơm chay tự chọn"></image-slot></figure>
-      <figure style="margin:0;grid-column:span 2;position:relative;aspect-ratio:16/10;border-radius:12px;overflow:hidden;color:#A6907A;background:#FAF5EC"><image-slot id="vl-g-6" shape="rect" data-filled="" src="img/g-ruoc-le.jpg" placeholder="Đêm lửa trại"></image-slot></figure>
+      <figure style="margin:0;grid-column:span 2;position:relative;aspect-ratio:16/10;border-radius:12px;overflow:hidden;color:#A6907A;background:#FAF5EC"><image-slot id="vl-g-6" shape="rect" data-filled="" src="img/s/g-khat-thuc-nui.jpg" placeholder="Đoàn khất thực dưới chân núi"></image-slot></figure>
     </div>
   </section>
 
@@ -545,10 +542,10 @@
           <span style="width:7px;height:7px;background:#A63A3A;transform:rotate(45deg);display:block"></span><span>Trước khi đến</span>
         </div>
         <h2 data-w="h2" style="font-family:'Noto Serif',serif;font-size:32px;line-height:1.2;margin:0">Câu hỏi thường gặp</h2>
-        <p style="margin:0;font-size:17px;color:#6B5647;max-width:34ch;text-wrap:pretty">Chưa có câu trả lời bạn cần? Đường dây nóng Ban tổ chức trực suốt ba ngày lễ hội.</p>
+        <p style="margin:0;font-size:17px;color:#6B5647;max-width:34ch;text-wrap:pretty">Nếu chưa tìm thấy câu trả lời, bạn có thể gọi đường dây nóng của Ban tổ chức.</p>
       </div>
       <div style="display:flex;flex-direction:column;border-bottom:1px solid #E2D3BC">
-        <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="6">
+        <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="5">
           <div>
             <button type="button" onClick="{{ f.toggle }}" aria-expanded="{{ f.open }}" style="{{ f.rowStyle }}">
               <span style="{{ f.numStyle }}">{{ f.num }}</span>
@@ -557,7 +554,7 @@
             </button>
             <div style="{{ f.panelStyle }}">
               <span></span>
-              <div style="padding:0 44px 24px 0;font-size:17px;color:#6B5647;line-height:1.7;text-wrap:pretty">{{ f.a }}</div>
+              <div style="padding:0 clamp(0px,5vw,44px) 24px 0;font-size:17px;color:#6B5647;line-height:1.7;text-wrap:pretty">{{ f.a }}</div>
             </div>
           </div>
         </sc-for>
@@ -620,7 +617,7 @@ const DAYS = [
     { time: "11:00", type: "le", title: "Lễ cúng ngọ và truy tiến chư Anh hùng chiến sĩ, chư Tiên linh", venue: "Động Âm Phủ" },
     { time: "14:00", type: "le", title: "Tụng kinh Địa Tạng quyển Hạ (tiếp)", venue: "Động Âm Phủ" },
     { time: "15:00", type: "le", title: "Cầu siêu chư Anh linh chiến sĩ · Tiểu Mông Sơn", venue: "Động Âm Phủ" },
-    { time: "16:00", type: "hoi", title: "Khai mạc Hội trại Vu Lan báo hiếu", venue: "Sân khấu chính" },
+    { time: "16:00", type: "hoi", key: true, title: "Khai mạc Hội trại Vu Lan báo hiếu", venue: "Sân khấu chính" },
     { time: "18:30", type: "le", key: true, title: "Thuyết pháp “Công ơn Cha Mẹ” (HT. Thích Từ Nghiêm) · Khóa lễ Niệm Phật · Lễ truyền đăng cầu quốc thái dân an", venue: "Trong động và sân khấu chính" },
     { time: "19:00 – 23:00", type: "hoi", key: true, title: "Không gian trải nghiệm văn hóa “Ký ức tháng Bảy”", venue: "Khuôn viên trước động Âm Phủ" },
     { time: "21:00 – 22:30", type: "hoi", key: true, title: "Đêm Lửa trại", venue: "Khu vực cắm trại" }
@@ -635,39 +632,40 @@ const DAYS = [
 ];
 
 const ROSES = [
-  { name: "Đỏ", color: "#C8342F", ink: "#EF7A72", title: "Hoa hồng đỏ", text: "Bạn còn đủ cả cha và mẹ — niềm hạnh phúc không phải ai cũng còn giữ được." },
+  { name: "Đỏ", color: "#C8342F", ink: "#EF7A72", title: "Hoa hồng đỏ", text: "Bạn còn đủ cả cha và mẹ. Niềm hạnh phúc không phải ai cũng còn giữ được." },
   { name: "Hồng", color: "#E79AA6", title: "Hoa hồng phớt hồng", text: "Bạn còn cha hoặc còn mẹ. Một nửa yêu thương vẫn ở bên, và mỗi ngày bên nhau đều đáng quý." },
   { name: "Trắng", color: "#F5F0E6", title: "Hoa hồng trắng", text: "Cha mẹ đã khuất. Bông hoa trắng là lời tưởng nhớ, và sống thiện lành là cách báo hiếu tiếp nối." },
-  { name: "Vàng", color: "#E0A24A", title: "Hoa hồng vàng", text: "Dành cho chư Tăng Ni đã xuất gia — báo hiếu rộng khắp, xem tất cả chúng sinh như cha mẹ nhiều đời." }
+  { name: "Vàng", color: "#E0A24A", title: "Hoa hồng vàng", text: "Dành cho chư Tăng Ni đã xuất gia. Báo hiếu rộng khắp, xem tất cả chúng sinh như cha mẹ nhiều đời." }
 ];
+
+// Vân đá cẩm thạch dùng chung cho các "tấm bia" trên trang (phân khu, thẻ ngày).
+const STONE_VEIN = "linear-gradient(116deg, rgba(255,255,255,.5) 0 13%, rgba(255,255,255,0) 13% 29%, rgba(255,255,255,.38) 29% 37%, rgba(255,255,255,0) 37% 61%, rgba(255,255,255,.3) 61% 67%, rgba(255,255,255,0) 67%)";
+const STONE_LIGHT = "inset 0 1px 0 rgba(255,255,255,.72), inset 0 -2px 4px -2px rgba(90,78,62,.32), 0 1px 2px rgba(62,44,35,.10)";
 
 const CENTER = [16.00265, 108.26355];
 const ZONES = [
-  { n: 1, name: "Sân khấu chính", ll: [16.00291, 108.26330], note: "Khai mạc 7h30 ngày 21/8, bế mạc 16h ngày 22/8." },
+  { n: 1, name: "Sân khấu chính", ll: [16.00291, 108.26330], note: "Khai mạc 7h30 ngày 21/8, bế mạc 16h ngày 22/8.", img: "img/s/hl-hoc-bong.jpg" },
   { n: 2, name: "Động Âm Phủ", ll: [16.00248, 108.26392], note: "Tụng kinh, cầu siêu, thuyết pháp. Giữ yên lặng." },
-  { n: 3, name: "Ký ức tháng Bảy", ll: [16.00318, 108.26401], note: "Không gian trải nghiệm văn hóa, 19h–23h." },
-  { n: 4, name: "Trà đạo · thư pháp", ll: [16.00234, 108.26296], note: "Mở từ 9h ngày 20/8, có tặng chữ." },
-  { n: 5, name: "Ẩm thực chay", ll: [16.00203, 108.26345], note: "Cơm chay tự chọn từ 9h30 ngày 21/8." },
-  { n: 6, name: "Hội trại và lửa trại", ll: [16.00347, 108.26268], note: "Khai mạc 16h, lửa trại 21h ngày 21/8." },
+  { n: 3, name: "Ký ức tháng Bảy", ll: [16.00318, 108.26401], note: "Không gian trải nghiệm văn hóa, 19h–23h.", img: "img/s/hl-ky-uc.jpg" },
+  { n: 4, name: "Trà đạo · thư pháp", ll: [16.00234, 108.26296], note: "Mở từ 9h ngày 20/8, có tặng chữ.", img: "img/s/hl-thu-phap.jpg" },
+  { n: 5, name: "Ẩm thực chay", ll: [16.00203, 108.26345], note: "Cơm chay tự chọn từ 9h30 ngày 21/8.", img: "img/s/hl-com-chay.jpg" },
+  { n: 6, name: "Hội trại và lửa trại", ll: [16.00347, 108.26268], note: "Khai mạc 16h, lửa trại 21h ngày 21/8.", img: "img/s/hl-hoi-trai.jpg" },
   { n: 7, name: "Bãi giữ xe", ll: [16.00176, 108.26262], note: "Bãi do Ban tổ chức quản lý, có người hướng dẫn." },
   { n: 8, name: "Y tế và hỗ trợ", ll: [16.00279, 108.26243], note: "Sơ cấp cứu và hỗ trợ thông tin cho khách." }
 ];
 
 const ETIQUETTE = [
-  { t: "Trang phục lịch sự", d: "ưu tiên áo dài, áo lam hoặc trang phục qua vai và đầu gối khi vào khu nghi lễ." },
-  { t: "Giữ trang nghiêm trong động", d: "nói nhỏ, tắt chuông điện thoại, không chen lấn trước ban thờ." },
-  { t: "Chụp ảnh có ý thức", d: "không dùng đèn flash trong động, nhường lối cho người đang hành lễ." },
-  { t: "Dâng hương đúng nơi quy định", d: "không rải hay đốt vàng mã tự phát; dâng hương, dâng đăng tại điểm Ban tổ chức bố trí." },
-  { t: "Giữ vệ sinh và tài sản", d: "bỏ rác đúng nơi quy định, tự bảo quản tư trang nơi đông người." }
+  { t: "Trang phục kín đáo khi vào khu nghi lễ", d: "áo dài, áo lam hoặc trang phục qua vai và đầu gối là lựa chọn thường thấy." },
+  { t: "Không khí yên tĩnh trong động", d: "mọi người nói nhỏ, tắt chuông điện thoại, không dùng đèn flash và nhường lối cho người đang hành lễ." },
+  { t: "Điểm dâng hương và dâng đăng", d: "Ban tổ chức bố trí sẵn, lễ hội không rải hay đốt vàng mã." }
 ];
 
 const FAQS = [
-  { q: "Vào lễ hội có mất phí không?", a: "Các hoạt động Lễ và Hội đều mở cho mọi người, không thu phí. Vé tham quan Danh thắng Ngũ Hành Sơn và phí thang máy áp dụng theo quy định hiện hành của thành phố." },
+  { q: "Chính lễ Vu Lan là ngày nào?", a: "Chính lễ (Rằm tháng Bảy) rơi vào thứ Năm 27/8/2026, sau 3 ngày lễ hội. Các chùa trong khu vực đều tổ chức lễ trong ngày này." },
   { q: "Nên đến vào lúc nào nếu chỉ đi được một buổi?", a: "Sáng 21/8 từ 7h30 (khai mạc, cài hoa hồng, cơm chay tự chọn) hoặc tối 21/8 từ 18h30 (thuyết pháp, lễ truyền đăng, Ký ức tháng Bảy)." },
-  { q: "Chính lễ Vu Lan là ngày nào?", a: "Chính lễ Vu Lan (Rằm tháng Bảy) rơi vào thứ Năm 27/8/2026, sau 3 ngày lễ hội. Các chùa trong khu vực đều có khóa lễ trong ngày này." },
-  { q: "Người cao tuổi, người đi xe lăn tham dự được không?", a: "Có thang máy lên ngọn Thủy Sơn, lối đi thuận tiện và có điểm trực y tế thường trực. Nên tránh khung giờ 7h30–9h ngày 21/8 vì rất đông." },
-  { q: "Gửi xe ở đâu, giá bao nhiêu?", a: "Tại các điểm trông giữ xe do Ban tổ chức quản lý; nội quy và giá dịch vụ được niêm yết công khai tại cổng. Không gửi xe tại các điểm tự phát ven đường." },
-  { q: "Cơm chay dành cho ai, có cần đăng ký?", a: "Cơm chay tự chọn do Ban tổ chức và các mạnh thường quân cúng dường, mời mọi người dân và du khách, không cần đăng ký. Phục vụ từ 9h30 ngày 21/8 tại khuôn viên trước động Âm Phủ; ngoài ra có quán chay và không gian trà đạo mở suốt lễ hội." }
+  { q: "Vào lễ hội có mất phí không?", a: "Các hoạt động Lễ và Hội đều mở cho mọi người, không thu phí. Vé tham quan Danh thắng Ngũ Hành Sơn và phí thang máy áp dụng theo quy định hiện hành của thành phố." },
+  { q: "Người cao tuổi, người đi xe lăn tham dự được không?", a: "Được. Khu lễ hội có thang máy lên ngọn Thủy Sơn, lối đi thuận tiện và điểm y tế trực thường xuyên. Nên tránh khung giờ 7h30–9h ngày 21/8 vì rất đông." },
+  { q: "Gửi xe ở đâu, giá bao nhiêu?", a: "Tại các điểm trông giữ xe do Ban tổ chức quản lý; nội quy và giá dịch vụ được niêm yết công khai tại cổng." }
 ];
 
 const TARGET = new Date("2026-08-21T07:30:00+07:00").getTime();
@@ -702,7 +700,7 @@ const NAV = [
 ];
 
 class Component extends DCLogic {
-  state = { day: 1, rose: 0, faq: -1, full: false, zone: -1, now: Date.now(), active: "", progress: 0 };
+  state = { day: 1, rose: 0, faq: -1, full: false, zone: -1, ev: "", etq: false, now: Date.now(), active: "", progress: 0 };
 
   componentDidMount() {
     const d = this.props.defaultDay;
@@ -737,10 +735,13 @@ class Component extends DCLogic {
         alt: "Phân khu " + z.n + ": " + z.name
       }).addTo(this.map);
       const gmap = "https://www.google.com/maps/dir/?api=1&destination=" + z.ll[0] + "," + z.ll[1];
+      const pic = z.img
+        ? '<img src="' + z.img + '" alt="" style="width:100%;height:92px;object-fit:cover;border-radius:8px;display:block;margin:0 0 9px" />'
+        : "";
       m.bindPopup(
-        "<strong>" + z.n + ". " + z.name + "</strong><br />" + z.note +
+        pic + "<strong>" + z.n + ". " + z.name + "</strong><br />" + z.note +
         '<br /><a href="' + gmap + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-weight:600;color:#A63A3A">Chỉ đường tới đây →</a>',
-        { autoPanPadding: [16, 16], maxWidth: 230 }
+        { autoPanPadding: [16, 16], maxWidth: 250 }
       );
       return m;
     });
@@ -802,9 +803,27 @@ class Component extends DCLogic {
     }
   }
 
+  // Long programme entries are compound strings; keep only the leading unit as
+  // the headline so the timeline scans in one line per item, and fold the rest
+  // into a tap-to-open detail list.
+  splitTitle(t) {
+    let head = t, rest = "", fromColon = false;
+    const at = (sep) => t.indexOf(sep);
+    if (at(": ") > 0) { head = t.slice(0, at(": ")); rest = t.slice(at(": ") + 2); fromColon = true; }
+    else if (at("; ") > 0) { head = t.slice(0, at("; ")); rest = t.slice(at("; ") + 2); }
+    else if (at(" · ") > 0) { head = t.slice(0, at(" · ")); rest = t.slice(at(" · ") + 3); }
+    else if (t.length > 58 && at(" – ") > 0) { head = t.slice(0, at(" – ")); rest = t.slice(at(" – ") + 3); }
+    if (!rest) return { head: t, items: [] };
+    let items = rest.split(" · ");
+    if (items.length === 1 && fromColon) items = rest.split(", ");
+    if (items.length === 1 && rest.indexOf(" – ") > 0) items = rest.split(" – ");
+    const cap = (s) => s.charAt(0).toLocaleUpperCase("vi") + s.slice(1);
+    return { head: head, items: items.map(s => s.trim()).filter(Boolean).map(cap) };
+  }
+
   pickDay(i) {
     this.keepScroll = window.scrollY;
-    this.setState({ day: i });
+    this.setState({ day: i, ev: "" });
   }
 
 
@@ -850,6 +869,18 @@ class Component extends DCLogic {
     };
   }
 
+  noteVals(list) {
+    return list.map(e => ({
+      t: e.t,
+      d: e.d.charAt(0).toLocaleUpperCase("vi") + e.d.slice(1),
+      dStyle: {
+        overflow: "hidden", maxHeight: this.state.etq ? "160px" : "0px",
+        opacity: this.state.etq ? 1 : 0, marginTop: this.state.etq ? "3px" : "0px",
+        transition: "max-height .4s cubic-bezier(.22,.61,.36,1), opacity .3s ease, margin-top .3s ease"
+      }
+    }));
+  }
+
   buildTimeline(evs) {
     const phaseOf = (h) => (h < 11 ? "Buổi sáng" : h < 17 ? "Buổi chiều" : "Buổi tối");
     const out = [];
@@ -860,22 +891,59 @@ class Component extends DCLogic {
       const ph = phaseOf(hour);
       if (ph !== phase) {
         phase = ph;
-        out.push({
-          isPhase: true, isEvent: false, phaseLabel: ph,
-          phaseStyle: {
-            display: "inline-flex", alignItems: "center", marginLeft: "-27px", marginBottom: "16px",
-            padding: "7px 16px", borderRadius: "999px", background: "#FAF5EC", border: "1px solid #E8D6B8",
-            fontSize: "12.5px", letterSpacing: ".12em", textTransform: "uppercase",
-            fontWeight: 700, color: "#8A5210", whiteSpace: "nowrap", flex: "0 0 auto"
+        const sun = "radial-gradient(circle at 38% 32%, #F0BC6C, #C8791B)";
+        const icons = {
+          "Buổi sáng": {
+            outer: { position: "relative", width: "22px", height: "11px", overflow: "hidden", borderBottom: "1.5px solid #C8925B", flex: "none" },
+            inner: { position: "absolute", left: "3px", top: "2px", width: "15px", height: "15px", borderRadius: "50%", background: sun }
+          },
+          "Buổi chiều": {
+            outer: { width: "15px", height: "15px", borderRadius: "50%", background: sun, boxShadow: "0 0 0 4px rgba(200,121,27,.16)", flex: "none" },
+            inner: { display: "none" }
+          },
+          "Buổi tối": {
+            outer: { width: "16px", height: "16px", borderRadius: "50%", boxShadow: "inset 5px -2.5px 0 0 #C8791B", transform: "rotate(-18deg)", flex: "none" },
+            inner: { display: "none" }
           }
-        });
+        };
+        out.push({ isPhase: true, isEvent: false, phaseLabel: ph, iconStyle: icons[ph].outer, iconInnerStyle: icons[ph].inner });
       }
       const t = TYPE[e.type];
       const key = !!e.key;
+      const parts = this.splitTitle(e.title);
+      const evk = this.state.day + "|" + e.time;
+      const hasDetail = parts.items.length > 0;
+      const open = hasDetail && this.state.ev === evk;
       out.push({
         isPhase: false, isEvent: true,
         start: start, range: e.time.indexOf("–") > -1 ? e.time : "",
-        title: e.title, venue: e.venue, typeLabel: t.label,
+        title: parts.head, venue: e.venue, typeLabel: t.label,
+        hasDetail: hasDetail,
+        role: hasDetail ? "button" : undefined,
+        tab: hasDetail ? 0 : undefined,
+        expanded: hasDetail ? open : undefined,
+        toggle: hasDetail ? () => this.setState({ ev: open ? "" : evk }) : undefined,
+        onKey: hasDetail ? (ev) => {
+          if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); this.setState({ ev: open ? "" : evk }); }
+        } : undefined,
+        caretStyle: {
+          position: "absolute", right: key ? "14px" : "2px", top: key ? "19px" : "7px",
+          width: "13px", height: "13px", flex: "none",
+          transition: "transform .35s cubic-bezier(.34,1.2,.64,1)",
+          transform: open ? "rotate(135deg)" : "none",
+          background: "linear-gradient(#C8791B,#C8791B) center/100% 1.5px no-repeat, linear-gradient(#C8791B,#C8791B) center/1.5px 100% no-repeat"
+        },
+        detailStyle: {
+          display: "flex", flexDirection: "column", gap: "7px", overflow: "hidden",
+          maxHeight: open ? "420px" : "0px", opacity: open ? 1 : 0,
+          marginTop: open ? "4px" : "0px",
+          transition: "max-height .4s cubic-bezier(.22,.61,.36,1), opacity .3s ease, margin-top .3s ease"
+        },
+        detailItems: parts.items.map(s => ({
+          text: s,
+          rowStyle: { display: "flex", gap: "9px", fontSize: "15.5px", color: "#6B5647", lineHeight: 1.5 },
+          dotStyle: { width: "5px", height: "5px", background: "#C8791B", transform: "rotate(45deg)", flex: "none", marginTop: "8px" }
+        })),
         medStyle: {
           position: "absolute", left: "-27px", top: 0, width: "52px", height: "52px", borderRadius: "50%",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -886,8 +954,12 @@ class Component extends DCLogic {
           boxShadow: key ? "0 8px 16px -10px rgba(138,45,38,.8)" : "none"
         },
         cardStyle: {
+          position: "relative", textAlign: "left", width: "100%",
           display: "flex", flexDirection: "column", gap: "5px", minHeight: "52px", justifyContent: "center",
-          padding: key ? "14px 16px" : "4px 2px",
+          cursor: hasDetail ? "pointer" : "default",
+          padding: key
+            ? (hasDetail ? "14px 38px 14px 16px" : "14px 16px")
+            : (hasDetail ? "4px 26px 4px 2px" : "4px 2px"),
           borderRadius: key ? "12px" : 0,
           background: key ? "#FFFBF2" : "transparent",
           border: key ? "1px solid #E8D6B8" : 0,
@@ -1119,10 +1191,18 @@ class Component extends DCLogic {
         select: () => this.pickDay(i),
         tabStyle: {
           display: "flex", flexDirection: "column", alignItems: "center", gap: "1px",
-          padding: "10px 4px", minHeight: "56px", borderRadius: "12px", cursor: "pointer",
-          background: i === this.state.day ? "#3E2C23" : "#F2E8D6",
-          color: i === this.state.day ? "#FAF5EC" : "#5C4A3C",
-          border: d.isMain && i !== this.state.day ? "1.5px solid #A63A3A" : "1.5px solid transparent"
+          padding: "10px 4px", minHeight: "56px", cursor: "pointer",
+          borderRadius: "4px 4px 10px 10px",
+          backgroundColor: i === this.state.day ? "#3E2C23" : "#E9E1D1",
+          backgroundImage: i === this.state.day ? "none" : STONE_VEIN,
+          color: i === this.state.day ? "#FAF5EC" : "#43382E",
+          textShadow: i === this.state.day ? "none" : "0 1px 0 rgba(255,255,255,.72)",
+          border: i === this.state.day
+            ? "1.5px solid #2A1D16"
+            : (d.isMain ? "1.5px solid #A63A3A" : "1.5px solid #D2C8B4"),
+          boxShadow: i === this.state.day
+            ? "inset 0 1px 0 rgba(255,255,255,.15), 0 3px 8px -4px rgba(62,44,35,.6)"
+            : STONE_LIGHT
         }
       })),
       activeDayTitle: active.title,
@@ -1137,19 +1217,42 @@ class Component extends DCLogic {
         return {
           n: z.n, name: z.name,
           focus: () => this.focusZone(i),
+          // Mỗi phân khu là một tấm bia đá cẩm thạch nhỏ, gợi bia ma nhai
+          // và chất đá của Ngũ Hành Sơn; khu đang chọn thì "sáng" lên viền vàng.
           btnStyle: {
             width: "100%", display: "flex", gap: "10px", alignItems: "center", cursor: "pointer",
-            background: on ? "#F6E7CE" : "#F2E8D6", borderRadius: "10px", padding: "10px 12px",
-            border: on ? "1.5px solid #C8791B" : "1.5px solid transparent", minHeight: "48px", height: "100%"
+            padding: "10px 12px", minHeight: "48px", height: "100%", whiteSpace: "nowrap",
+            borderRadius: "4px 4px 10px 10px", color: "#43382E",
+            textShadow: "0 1px 0 rgba(255,255,255,.72)",
+            backgroundColor: on ? "#E5DAC3" : "#E9E1D1",
+            backgroundImage: STONE_VEIN,
+            border: on ? "1.5px solid #C8791B" : "1.5px solid #D2C8B4",
+            boxShadow: on
+              ? "inset 0 1px 0 rgba(255,255,255,.8), 0 0 0 3px rgba(200,121,27,.15), 0 3px 8px -4px rgba(62,44,35,.55)"
+              : STONE_LIGHT
           },
           numStyle: {
-            fontFamily: "'Noto Serif', serif", fontWeight: 700, color: "#FFF6EC",
-            background: on ? "#A63A3A" : "#8A5210", minWidth: "26px", height: "26px", borderRadius: "7px",
-            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", flex: "none"
+            fontFamily: "'Noto Serif', serif", fontWeight: 700, fontSize: "15px", flex: "none",
+            minWidth: "26px", height: "26px", borderRadius: "6px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: on ? "#FFF6EC" : "#4A3E2E",
+            background: on ? "#A63A3A" : "rgba(116,100,76,.18)",
+            textShadow: on ? "none" : "0 1px 0 rgba(255,255,255,.55)",
+            boxShadow: on
+              ? "0 1px 3px rgba(120,30,26,.42)"
+              : "inset 0 1px 2px rgba(74,62,48,.34), 0 1px 0 rgba(255,255,255,.6)"
           }
         };
       }),
-      etiquette: ETIQUETTE,
+      etqOpen: this.state.etq,
+      etqSignStyle: {
+        position: "relative", width: "16px", height: "16px", flex: "none",
+        transition: "transform .4s cubic-bezier(.34,1.2,.64,1)",
+        transform: this.state.etq ? "rotate(135deg)" : "none",
+        background: "linear-gradient(#C8791B,#C8791B) center/100% 1.5px no-repeat, linear-gradient(#C8791B,#C8791B) center/1.5px 100% no-repeat"
+      },
+      toggleEtq: () => { this.keepScroll = window.scrollY; this.setState({ etq: !this.state.etq }); },
+      notes: this.noteVals(ETIQUETTE),
       faqs: FAQS.map((f, i) => {
         const open = i === this.state.faq;
         return {
@@ -1158,8 +1261,8 @@ class Component extends DCLogic {
           rowStyle: {
             width: "100%", textAlign: "left", background: "transparent", border: 0,
             borderTop: "1px solid " + (open ? "#C8791B" : "#E2D3BC"),
-            padding: "22px 0 18px", display: "grid", gridTemplateColumns: "26px 1fr auto",
-            gap: "18px", alignItems: "baseline", cursor: "pointer", minHeight: "56px",
+            padding: "22px 0 18px", display: "grid", gridTemplateColumns: "22px 1fr auto",
+            gap: "clamp(9px,3.4vw,18px)", alignItems: "baseline", cursor: "pointer", minHeight: "56px",
             transition: "border-color .3s ease"
           },
           numStyle: {
@@ -1167,9 +1270,9 @@ class Component extends DCLogic {
             color: open ? "#8A5210" : "#7D6749", transition: "color .3s ease", paddingTop: "4px"
           },
           qStyle: {
-            fontFamily: "'Noto Serif', serif", fontSize: "21px", lineHeight: 1.35,
+            fontFamily: "'Noto Serif', serif", fontSize: "clamp(18px,5vw,21px)", lineHeight: 1.35,
             fontWeight: open ? 600 : 400, color: open ? "#3E2C23" : "#4A382E",
-            transition: "color .3s ease", textWrap: "pretty"
+            transition: "color .3s ease"
           },
           signStyle: {
             position: "relative", width: "18px", height: "18px", flex: "none", alignSelf: "center",
@@ -1178,7 +1281,7 @@ class Component extends DCLogic {
             background: "linear-gradient(#C8791B,#C8791B) center/100% 1.5px no-repeat, linear-gradient(#C8791B,#C8791B) center/1.5px 100% no-repeat"
           },
           panelStyle: {
-            display: "grid", gridTemplateColumns: "26px 1fr", gap: "18px",
+            display: "grid", gridTemplateColumns: "22px 1fr", gap: "clamp(9px,3.4vw,18px)",
             maxHeight: open ? "460px" : "0px", opacity: open ? 1 : 0, overflow: "hidden",
             transition: "max-height .4s cubic-bezier(.22,.61,.36,1), opacity .3s ease"
           },
