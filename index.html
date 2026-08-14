@@ -1209,7 +1209,11 @@ class Component extends DCLogic {
       activeIsMain: active.isMain,
       showFull: this.state.full,
       fullLabel: this.state.full ? "Thu gọn" : "Xem đầy đủ " + active.events.length + " hoạt động",
-      toggleFull: () => { this.keepScroll = window.scrollY; this.setState({ full: !this.state.full }); },
+      toggleFull: () => {
+        const s = document.getElementById("chuong-trinh");
+        this.keepScroll = s ? Math.max(0, s.getBoundingClientRect().top + window.scrollY - 80) : window.scrollY;
+        this.setState({ full: !this.state.full });
+      },
       activeEvents: this.buildTimeline(evs),
 
       zones: ZONES.map((z, i) => {
